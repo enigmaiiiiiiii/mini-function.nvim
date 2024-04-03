@@ -40,34 +40,30 @@ M.insert_markdown_TOC = function()
   vim.api.nvim_buf_set_lines(0, row, row, false, toc)
 end
 
+
 M.commands = {
   FunkBufferPath = {
     run = M.get_buffer_path,
     args = {
       '-nargs=1',
-      "-complete=custom",
+      '-complete=custom',
     },
-  }
+  },
 }
 
 M.attach = function()
   local config = configs.get_module('funk')
+  -- bind the functions to keymaps
   for funcname, mapping in pairs(config.keymaps) do
     ---@type string|function
     local rhs = string.format(":lua require('mini-functions.funk').%s()<CR>", funcname)
     local mode = 'n'
     if mapping then
-      vim.keymap.set(
-        mode,
-        mapping,
-        rhs,
-        { silent = true, noremap = true, desc = FUNCTION_DESCRIPTIONS[funcname] }
-      )
+      vim.keymap.set(mode, mapping, rhs, { silent = true, noremap = true, desc = FUNCTION_DESCRIPTIONS[funcname] })
     end
   end
 end
 
-M.detach = function()
-end
+M.detach = function() end
 
 return M

@@ -45,6 +45,12 @@ local builtin_modules = {
       go_previous_sibling = '[k',
     },
   },
+  auto_save = {
+    module_path = "mini-functions.auto_save",
+    enable = true,
+    trigger_events = { 'BufLeave', 'FocusLost', 'InsertLeave', 'TextChanged' },
+    delay = 1500,
+  },
 }
 
 ---@type TSModule[]
@@ -83,6 +89,9 @@ local function resolve_module(mod_name)
   local config_mod = M.get_module(mod_name)
   if not config_mod then return end
 
+  -- this will check if attach and detach is provided in config table
+  -- if not, it will import the module with require
+  -- or return mod from config table
   if type(config_mod.attach) == 'function' and type(config_mod.detach) == 'function' then
     return config_mod
   elseif type(config_mod.module_path) == 'string' then
@@ -90,6 +99,8 @@ local function resolve_module(mod_name)
   end
 end
 
+-- Attaches a module
+---@param mod_name string  
 function M.attach_module(mod_name)
   local resolved_mod = resolve_module(mod_name)
 
@@ -108,7 +119,7 @@ end
 
 -- Gets a module config by path
 ---@param mod_path string path to the module
----@return TSModule|nil: the module or nil
+---@return table |nil: the module or nil
 function M.get_module(mod_path)
   local mod = utils.get_at_path(config.modules, mod_path)
   return M.is_module(mod) and mod or nil
@@ -121,6 +132,7 @@ function M.setup(user_data)
   config.ignore_install = user_data.ignore_install or {}
   config.parser_install_dir = user_data.parser_install_dir or nil
   if config.parser_install_dir then config.parser_install_dir = vim.fn.expand(config.parser_install_dir, ':p') end
+
   recurse_modules(function(_, _, new_path)
     local data = utils.get_at_path(config.modules, new_path)
     if data.enable then enable_all(new_path) end
@@ -159,10 +171,10 @@ M.init = function()
     M.define_modules(mod_def)
   end
 
-  recurse_modules(function(_, _, new_path)
-    local data = utils.get_at_path(config.modules, new_path)
-    if data.enable then enable_all(new_path) end
-  end, config.modules)
+  -- recurse_modules(function(_, _, new_path)
+  --   local data = utils.get_at_path(config.modules, new_path)
+  --   if data.enable then enable_all(new_path) end
+  -- end, config.modules)
 end
 
 return M

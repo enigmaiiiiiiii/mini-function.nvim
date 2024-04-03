@@ -2,7 +2,7 @@ local M = {}
 
 -- get property value at path
 ---@param path string path split by '.'
----@return table|nil result the value at path or nil
+---@return TSModule |nil result the value at path or nil
 function M.get_at_path(tbl, path)
   if path == '' then return tbl end
   local segments = vim.split(path, '.', true)
