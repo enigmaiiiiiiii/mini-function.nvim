@@ -3,34 +3,19 @@ local M = {}
 
 local auto_save_group = vim.api.nvim_create_augroup('auto_save', { clear = true })
 
-local global_vars = {}
+---@type table<number, number>
+local timer_table = {}
 
-local function set_buf_var(buf, name, value)
-  if buf == nil then
-    global_vars[name] = value
-  else
-    if vim.api.nvim_buf_is_valid(buf) then vim.api.nvim_buf_set_var(buf, 'autosave_' .. name, value) end
-  end
-end
+local debounce = function(func, delay)
+  local time_id = nil
 
-local function get_buf_var(buf, name)
-
-  if buf == nil then return global_vars[name] end
-
-  local success, mod = pcall(vim.api.nvim_buf_get_var, buf, 'autosave_' .. name)
-  return success and mod or nil
-end
-
-local debounce = function(func, duration)
   return function()
     local buf = vim.api.nvim_get_current_buf()
-    if not get_buf_var(buf, 'queued') then
-      vim.defer_fn(function()
-        set_buf_var(buf, 'queued', false)
-        func(buf)
-      end, duration)
-      set_buf_var(buf, 'queued', true)
+    if timer_table[buf] then
+      vim.fn.timer_stop(timer_table[buf])
     end
+    time_id = vim.fn.timer_start(delay, function() func(buf) end)
+    timer_table[buf] = time_id
   end
 end
 
@@ -46,11 +31,11 @@ local save = function(buf)
     return
   end
   vim.api.nvim_buf_call(buf, function()
-    vim.api.nvim_command("silent! update")
+    vim.api.nvim_command("silent update")
   end)
   local buf_name = vim.api.nvim_buf_get_name(buf)
   local file_name = string.match(buf_name, "/([^/]+)$")
-  local message = string.format('"%s" auto written at %s', file_name, os.date("%H:%M:%S"))
+  local message = string.format('"%s" auto written at %s', file_name, os.date("%H:%M:%S") )
   print(message)
 end
 

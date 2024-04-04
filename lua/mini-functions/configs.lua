@@ -49,7 +49,7 @@ local builtin_modules = {
     module_path = "mini-functions.auto_save",
     enable = true,
     trigger_events = { 'BufLeave', 'FocusLost', 'InsertLeave', 'TextChanged' },
-    delay = 1500,
+    delay = 2000,
   },
 }
 
