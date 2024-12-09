@@ -2,14 +2,16 @@ local M = {}
 
 -- get property value at path
 ---@param path string path split by '.'
----@return TSModule |nil result the value at path or nil
-function M.get_at_path(tbl, path)
-  if path == '' then return tbl end
-  local segments = vim.split(path, '.', true)
+---@return ModuleConfig |nil result the value at path or nil
+function M.get_at_path(configs, path)
+  if path == '' then return configs end
+  local segments = vim.split(path, '.', {plain = true})
+  print("segments:", segments);
   ---@type table[] | table
-  local result = tbl
+  local result = configs
 
   for _, segment in ipairs(segments) do
+    print("segment:", segment);
     if type(result) == 'table' then
       ---@type table
       result = result[segment]

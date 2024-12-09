@@ -1,6 +1,11 @@
-local configs = require('mini-functions.configs')
+local M = { }
 
-local M = {}
+M.config = {
+  keymaps = {
+    replace_with_clipboard = 'cp',
+    insert_markdown_TOC = '<leader>mt',
+  },
+}
 
 local FUNCTION_DESCRIPTIONS = {
   get_buffer_path = 'Copy the full path of the current buffer to the clipboard',
@@ -40,7 +45,6 @@ M.insert_markdown_TOC = function()
   vim.api.nvim_buf_set_lines(0, row, row, false, toc)
 end
 
-
 M.commands = {
   FunkBufferPath = {
     run = M.get_buffer_path,
@@ -52,11 +56,11 @@ M.commands = {
 }
 
 M.attach = function()
-  local config = configs.get_module('funk')
   -- bind the functions to keymaps
-  for funcname, mapping in pairs(config.keymaps) do
+  for funcname, mapping in pairs(M.config.keymaps) do
     ---@type string|function
-    local rhs = string.format(":lua require('mini-functions.funk').%s()<CR>", funcname)
+    -- local rhs = string.format(":lua require('mini-functions.funk').%s()<CR>", funcname)
+    local rhs = M[funcname]
     local mode = 'n'
     if mapping then
       vim.keymap.set(mode, mapping, rhs, { silent = true, noremap = true, desc = FUNCTION_DESCRIPTIONS[funcname] })

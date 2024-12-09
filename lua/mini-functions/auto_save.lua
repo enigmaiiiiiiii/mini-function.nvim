@@ -1,5 +1,9 @@
-local configs = require('mini-functions.configs')
 local M = {}
+
+M.config = {
+  trigger_events = { 'BufLeave', 'FocusLost', 'InsertLeave', 'TextChanged' },
+  delay = 2000,
+}
 
 local auto_save_group = vim.api.nvim_create_augroup('auto_save', { clear = true })
 
@@ -39,14 +43,15 @@ local save = function(buf)
   print(message)
 end
 
----@type number
-local delay = configs.get_module('auto_save').delay
-local debounced_save = debounce(save, delay)
+---@type function
+-- local delay = configs.get_config('auto_save').delay
+-- local debounced_save = debounce(save, delay)
+local debounced_save = debounce(save, M.config.delay)
 
-local auto_save = function(buf)
-  local config = configs.get_module('auto_save')
+local auto_save = function()
+  -- local config = configs.get_config('auto_save')
   vim.api.nvim_create_autocmd(
-    config.trigger_events,
+    M.config.trigger_events,
     {
       group = auto_save_group,
       callback = debounced_save,

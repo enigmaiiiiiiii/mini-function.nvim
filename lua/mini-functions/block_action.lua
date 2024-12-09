@@ -1,13 +1,21 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local parsers = require('nvim-treesitter.parsers')
 
-local configs = require('mini-functions.configs')
 local utils = require('mini-functions.utils')
 
 local M = {}
 
+M.config = {
+  keymaps = {
+    go_outer = '[[', -- Go to outer node
+    -- go_inner = ']]', -- Go to inner node
+    go_next_sibling = '[j', -- Go to next sibling
+    go_previous_sibling = '[k', -- Go to previous sibling
+  },
+}
+
 local update_cursor = function(node)
-  local srow, scol, _, _ = node:range()  ---@type integer, integer, integer, integer
+  local srow, scol, _, _ = node:range() ---@type integer, integer, integer, integer
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("m'", true, true, true), 'n', true)
   vim.api.nvim_win_set_cursor(0, { srow + 1, scol })
 end
@@ -43,7 +51,7 @@ local function sibling(get_target)
       --   end
       -- end
 
-      if (psrow == csrow and perow == cerow) or (psrow == tsrow and tsrow == csrow)  then
+      if (psrow == csrow and perow == cerow) or (psrow == tsrow and tsrow == csrow) then
         node = node:parent()
       else
         if target ~= node then
@@ -59,7 +67,6 @@ end
 
 -- M.go_outer = move(function(node) return node:parent() or node end)
 M.go_outer = utils.make_dot_repeat(function()
-
   local node = ts_utils.get_node_at_cursor() ---@type TSNode
   local csrow, cscol, cerow, cecol = node:range() ---@type integer, integer, integer, integer
 
@@ -73,7 +80,6 @@ M.go_outer = utils.make_dot_repeat(function()
     -- for root node or no next node selected
     if not target or target == node then
       -- Keep searching in the main tree
-      -- TODO: we should search on the parent tree of the current node.
       local root = parsers.get_parser():parse()[1]:root()
       target = root:named_descendant_for_range(csrow - 1, cscol - 1, cerow - 1, cecol)
       if not target or root == node or target == node then
@@ -91,7 +97,7 @@ M.go_outer = utils.make_dot_repeat(function()
   end
 end, 'v:lua.MiniFunctionsJumpRow.go_outer')
 
-M.go_inner = sibling(function(node) return node:child(0) or node end)
+-- M.go_inner = sibling(function(node) return node:child(0) or node end)
 
 M.go_next_sibling = utils.make_dot_repeat(
   sibling(function(node) return node:next_sibling() or node end),
@@ -112,8 +118,7 @@ local FUNCTION_DESCRIPTIONS = {
 
 M.attach = function()
   _G.MiniFunctionsJumpRow = M
-  local config = configs.get_module('jump_row')
-  for funcname, mapping in pairs(config.keymaps) do
+  for funcname, mapping in pairs(M.config.keymaps) do
     ---@type string|function
     local rhs = M[funcname]
     local mode = 'n'
@@ -130,8 +135,7 @@ end
 
 M.detach = function(bufnr)
   _G.MiniFunctionsJumpRow = nil
-  local config = configs.get_module('jump_row')
-  for _, mapping in pairs(config.keymaps) do
+  for _, mapping in pairs(M.config.keymaps) do
     if mapping then vim.keymap.del('n', mapping, { buffer = bufnr }) end
   end
 end

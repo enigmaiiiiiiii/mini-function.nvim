@@ -1,1 +1,1 @@
-command! BufferPath lua require('mini-functions.funk').get_buffer_path()
+command! BufferPath lua require('mini-functions.quick_funks').get_buffer_path()
