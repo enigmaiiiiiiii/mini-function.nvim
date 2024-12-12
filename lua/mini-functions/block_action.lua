@@ -95,18 +95,18 @@ M.go_outer = utils.make_dot_repeat(function()
       return
     end
   end
-end, 'v:lua.MiniFunctionsJumpRow.go_outer')
+end, 'v:lua.MiniFunctionsBlockAction.go_outer')
 
 -- M.go_inner = sibling(function(node) return node:child(0) or node end)
 
 M.go_next_sibling = utils.make_dot_repeat(
   sibling(function(node) return node:next_sibling() or node end),
-  'v:lua.MiniFunctionsJumpRow.go_next_sibling'
+  'v:lua.MiniFunctionsBlockAction.go_next_sibling'
 )
 
 M.go_previous_sibling = utils.make_dot_repeat(
   sibling(function(node) return node:prev_sibling() or node end),
-  'v:lua.MiniFunctionsJumpRow.go_previous_sibling'
+  'v:lua.MiniFunctionsBlockAction.go_previous_sibling'
 )
 
 local FUNCTION_DESCRIPTIONS = {
@@ -116,28 +116,50 @@ local FUNCTION_DESCRIPTIONS = {
   go_previous_sibling = 'Go to previous sibling',
 }
 
+local keymap_opts = function(desc) return { silent = true, expr = true, noremap = true, buffer=true, desc = desc } end
+
+local function set_block_action_keymaps()
+  vim.keymap.set('n', M.config.keymaps.go_outer, function() M.go_outer() end, keymap_opts('Go To Outer Node'))
+  -- vim.keymap.set('n', M.config.keymaps.go_inner, function() M.go_inner() end, keymap_opts('Go To Inner Node'))
+  vim.keymap.set(
+    'n',
+    M.config.keymaps.go_next_sibling,
+    function() M.go_next_sibling() end,
+    keymap_opts('Go To Next Sibling')
+  )
+  vim.keymap.set(
+    'n',
+    M.config.keymaps.go_previous_sibling,
+    function() M.go_previous_sibling() end,
+    keymap_opts('Go To Previous Sibling')
+  )
+end
+
+local autocmd_group = 'MiniFunctionsBlockAction'
+--- @return boolean
+local function is_nofile_buf()
+  local buftype = vim.bo.buftype
+  if buftype == 'nofile' or buftype == 'terminal' then return true end
+  return false
+end
+
 M.attach = function()
-  _G.MiniFunctionsJumpRow = M
-  for funcname, mapping in pairs(M.config.keymaps) do
-    ---@type string|function
-    local rhs = M[funcname]
-    local mode = 'n'
-    if mapping then
-      vim.keymap.set(
-        mode,
-        mapping,
-        rhs,
-        { silent = true, expr = true, noremap = true, desc = FUNCTION_DESCRIPTIONS[funcname] }
-      )
-    end
-  end
+  _G.MiniFunctionsBlockAction = M
+  vim.api.nvim_create_augroup(autocmd_group, { clear = true })
+  vim.api.nvim_create_autocmd('BufEnter', {
+    group = autocmd_group,
+    pattern = '*',
+    callback = function()
+      if is_nofile_buf() then return end
+      set_block_action_keymaps()
+    end,
+  })
 end
 
 M.detach = function(bufnr)
-  _G.MiniFunctionsJumpRow = nil
-  for _, mapping in pairs(M.config.keymaps) do
-    if mapping then vim.keymap.del('n', mapping, { buffer = bufnr }) end
-  end
+  _G.MiniFunctionsBlockAction = nil
+  vim.api.nvim_clear_autocmds({
+    group = autocmd_group,
+  })
 end
-
 return M

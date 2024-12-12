@@ -26,21 +26,23 @@ function M.setup_commands(mod, commands)
     local f_args = def.args or '<f-args>'
     local call_fn =
       string.format('lua require("mini-function.%s").commands.%s["run<bang>"(%s)])', mod, command_name, f_args)
-    local parts = vim.tbl_flatten({
+    local parts = vim.iter({
       'command!',
       '-bar',
       def.args,
       command_name,
       call_fn,
-    })
+    }):flatten():totable()
     vim.api.nvim_command(table.concat(parts, ' '))
   end
 end
 
+--- @param tbl table
 function M.table_inspect(tbl, indent)
   if not indent then indent = 0 end
   for k, v in pairs(tbl) do
-    formatting = string.rep('  ', indent) .. k .. ': '
+    --- @type string
+    local formatting = string.rep('  ', indent) .. k .. ': '
     if type(v) == 'table' then
       print(formatting)
       M.table_inspect(v, indent + 1)
