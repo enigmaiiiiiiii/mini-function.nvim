@@ -1,1 +1,2 @@
-require("mini-functions").setup()
+-- disable setup when installed
+-- require("mini-functions").setup()

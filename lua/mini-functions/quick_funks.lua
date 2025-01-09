@@ -4,7 +4,7 @@ M.config = {
   keymaps = {
     replace_with_clipboard = 'cp',
     insert_markdown_TOC = '<leader>mt',
-    switch_focus_on_vertical = '<tab>',
+    switch_focus_on_vertical = '<c-\\>'
   },
 }
 
